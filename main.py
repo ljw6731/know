@@ -51,3 +51,4 @@ for i in range(0, 5):
     clac(int(input()), q2[i])
     print('현재 점수',변수,'점')
     time.sleep(TIME)
+    #dfdfsfwef
