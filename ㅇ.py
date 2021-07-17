@@ -1,7 +1,6 @@
 a = '여기는 \ n 와이즈만 \ n입니다.'
-b = '' '여기는
-와이즈만
-입니다.
+b = '여기는와이즈만입니다.'
+
 # '' '
 c = '여기는 \ t 와이즈만 \ t입니다. \ n 여기는 \ t 집 \ t입니다.'
 print (유형 (a))
@@ -13,7 +12,7 @@ sen = '멋지네요.'
 print ( '당신의 점수는 % d입니다. % s'% (score, sen))
 print ( '당신의 점수는 {}입니다. {}'. format (score, sen))
 print ( '당신의 점수는 {1}입니다. {0}'. format (score, sen))
-print (f '당신의 점수는 {score}입니다. {sen}')
+print (f'당신의 점수는 {점수}입니다. {sen}')
 
 string = '이것은 내 파이썬 프로젝트입니다 .'
 print (len (문자열))
