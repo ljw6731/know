@@ -6,14 +6,19 @@ Screen_x = 480 * 2
 Screen_y = 300 * 2
 CHARACTER_SPEED = 5
 
-class Player:
+class Player(pygame.sprite.Sprite):
     def __init__(self, root):
+        self.game = root
+        self.groups = self.game.all_sprite
+        pygame.srpite.Sprite__init__(self, self.groups)
         self.x = 100
         self.y = Screen_y-200
         self.dx = 0
         self.dy = 0
         self.game = root
-        self.image = self.game.player_image
+        self.images = self.game.player_dinos
+        self.index = 0
+        self.image = self.images[self.index]
         self.hit = 0
 
     def move(self, key):
@@ -41,6 +46,15 @@ class Player:
         else:
             self.dy *= -1
             self.y += self.dy
+
+        self.anim()
+
+    def anim(self):
+        if self.index < len(self, images):
+            self.index +=1
+            self.image = self.imges[self.index]
+        else:
+            self.index = 0
 
     def draw(self):
         game.screen.blit(self.image, (self.x, self.y))
@@ -103,8 +117,11 @@ class Game:
         self.playing = True
         self.rains = []
         self.clouds = []
+        self.player_dinos = []
+        self.all_sprites = pygame.sprite.LayerdUpdates()
         self.load_data()
         self.player = Player(self)
+        self.all_sprites.add(self)
 
     def load_data(self):
         self.image = pygame.image.load('99A3E1445FD60DEA3B.jpg').convert_alpha()
@@ -119,7 +136,7 @@ class Game:
         #for x in range(1, 11):
             #self.player_dinos.append(pygame.image.load(f'Idle ({x}).png').convert_alpha())
 
-        self.player_dinos[pygame.image.load(f'Idle ({x}).png').convert_alpha() for x in range(1, 10)]
+        self.player_dinos = [pygame.image.load(f'Idle ({x}).png').convert_alpha() for x in range(1, 10)]
 
 
     def run(self):
