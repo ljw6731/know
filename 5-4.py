@@ -115,9 +115,11 @@ class Game:
         self.player_image = pygame.image.load('dino.png').convert_alpha()
         self.player_image = pygame.transform.scale(self.player_image, (260,200))
 
-        self.player_dinos = []
-        for x in range(1, 11):
-            self.player_dinos.append(pygame.image.load(f'Idle ({x}).png').convert_alpha())
+        #self.player_dinos = []
+        #for x in range(1, 11):
+            #self.player_dinos.append(pygame.image.load(f'Idle ({x}).png').convert_alpha())
+
+        self.player_dinos[pygame.image.load(f'Idle ({x}).png').convert_alpha() for x in range(1, 10)]
 
 
     def run(self):
