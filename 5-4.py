@@ -117,7 +117,7 @@ class Game:
 
         self.player_dinos = []
         for x in range(1, 11):
-            self.player_dinos.append(pygame.image.load(f'Idle ({x}).png'))
+            self.player_dinos.append(pygame.image.load(f'Idle ({x}).png').convert_alpha())
 
 
     def run(self):
