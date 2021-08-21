@@ -1,5 +1,6 @@
 import pygame
 import random
+from pygame.locals import *
 
 Screen_x = 480 * 2
 Screen_y = 300 * 2
@@ -67,7 +68,11 @@ class Cloud:
         self.game.rains.append(Rain(self.x+random.randint(0, 130), self.y+60, self.game))
 
     def click(self):
-        self.game.rains.append(Rain(self.x+random.randint(0,130), self.y+70, self.game))
+        pos = pygame.mouse.get_pos()
+        rect = self.image.get_rect()
+        rect.x = self.x
+        rect.y = self.y
+        return rect.collidepoint(pos)
 
 class Rain():
     def __init__(self, x, y, game):
@@ -106,18 +111,23 @@ class Game:
         self.image = pygame.transform.scale(self.image, (Screen_x, Screen_y))
 
         self.image_cloud = pygame.image.load('cloud (1).svg')
-
-        self.player_image = pygame.image.load('tera-a.svg').convert_alpha()
+        self.player_image = pygame.image.load('dino.png').convert_alpha()
         self.player_image = pygame.transform.scale(self.player_image, (260,200))
+
+        self.player_dinos = []
+        for x in range(1, 11):
+            self.player_dinos.append(pygame.image.load) = pygame.image.load(f'Idle ({x}).png').convert_alpha()
 
 
     def run(self):
+        self.opening()
         while self.playing:
             self.clock.tick(55)
             self.event()
             self.update()
             self.draw()
             pygame.display.update()
+        self.ending()
 
     def event(self):
         for event in pygame.event.get():
@@ -125,7 +135,7 @@ class Game:
                 self.playing = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for cloud in self.clouds:
-                   if cloud.clck(event):
+                   if cloud.click():
                        self.clouds.remove(cloud)
                        del cloud
             if event.type == pygame.KEYDOWN:
@@ -149,6 +159,9 @@ class Game:
         # 구름 움직이기
         for cloud in self.clouds:
             cloud.move()
+        # 캐릭터 움직이기
+        self.player.move(None)
+
     def draw(self):
         self.screen.fill((200, 255, 200))
         self.screen.blit(self.image, (0, 0))
@@ -157,6 +170,45 @@ class Game:
         for cloud in self.clouds:
             cloud.draw()
         self.player.draw()
+
+    def opening(self):
+        self.screen.fill(pygame.Color('black'))
+        stop = True
+        self.draw_text(f'스페이스 바를 누르면 게임이 시작 됩니다.', 30, pygame.Color('hotpink'), 100, Screen_y * 1 / 20)
+        self.draw_text(f'구름을 클릭하면 구름이 사라집니다.', 30, pygame.Color('hotpink'), 100,  Screen_y * 2 / 20)
+        self.draw_text(f'방향키로 공룡을 조작합니다.', 30, pygame.Color('hotpink'), 100, Screen_y * 3 / 20)
+        self.draw_text(f'q를 누르면 게임이 종료됩니다.', 30, pygame.Color('hotpink'), 100, Screen_y * 4 / 20)
+        pygame.display.flip()
+        while stop:
+            self.clock.tick(60)
+            pygame.event.get()
+            self.pressed_key = pygame.key.get_pressed()
+            if self.pressed_key[K_SPACE]:
+                stop = False
+
+    def ending(self):
+        self.screen.fill(pygame.Color('black'))
+        stop = True
+        self.draw_text(f' .', 30, pygame.Color('hotpink'), 100, Screen_y * 1 / 20)
+        self.draw_text(f'구름을 클릭하면 구름이 사라집니다.', 30, pygame.Color('hotpink'), 100, Screen_y * 2 / 20)
+        self.draw_text(f'방향키로 공룡을 조작합니다.', 30, pygame.Color('hotpink'), 100, Screen_y * 3 / 20)
+        pygame.display.flip()
+        while stop:
+            self.clock.tick(60)
+            pygame.event.get()
+            self.pressed_key = pygame.key.get_pressed()
+            if self.pressed_key[K_SPACE]:
+                stop = False
+
+    def draw_text(self, text, size, color, x, y):
+        font = pygame.font.SysFont('malgungothic', size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.x = x
+        text_rect.y = y
+        self.screen.blit(text_surface, text_rect)
+
+
 
 game = Game()
 game.run()
