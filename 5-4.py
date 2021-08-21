@@ -50,7 +50,7 @@ class Player(pygame.sprite.Sprite):
         self.anim()
 
     def anim(self):
-        if self.index < len(self, images):
+        if self.index < len(self,self.images):
             self.index +=1
             self.image = self.imges[self.index]
         else:
@@ -118,10 +118,11 @@ class Game:
         self.rains = []
         self.clouds = []
         self.player_dinos = []
-        self.all_sprites = pygame.sprite.LayerdUpdates()
+        self.all_sprites = pygame.sprite.LayeredUpdates
         self.load_data()
         self.player = Player(self)
-        self.all_sprites.add(self)
+        self.all_sprites.add(self.player)
+
 
     def load_data(self):
         self.image = pygame.image.load('99A3E1445FD60DEA3B.jpg').convert_alpha()
