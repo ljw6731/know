@@ -8,6 +8,13 @@ SCREEN_Y = 410 * 2  # 화면 높이
 FPS = 60
 
 
+def draw_text(surface, text, size, color, x, y):
+    font = pygame.font.SysFont('malgungothic', size)
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect()
+    text_rect.x = x
+    text_rect.y = y
+    surface.blit(text_surface, text_rect)
 
 class Ui(pygame.sprite.Sprite):
     def __init__(self, root):
@@ -21,18 +28,12 @@ class Ui(pygame.sprite.Sprite):
 
     def update(self):
         self.image.fill('Black')
-        pygame.draw.rect(self.image, 'Gray', (25,30, SCREEN_X-50, SCREEN_Y-50), 10, 10)
+        pygame.draw.rect(self.image, 'Gray', (20,20, SCREEN_X-50, SCREEN_Y-50), 10, 10)
         self.ui_health = self.game.snake.score
         pygame.draw.line(self.image, 'blue', (100, SCREEN_Y-65),  (100+self.ui_health*3, SCREEN_Y-65), 15)
-        self.draw_text(f'사과를 먹은수{self.ui_health}', 30, pygame.Color('blue'), 100, SCREEN_Y -65)
+        draw_text(self.image, f'사과를 먹은수{self.ui_health}', 30, pygame.Color('blue'), 100, SCREEN_Y -65)
+        draw_text(self.image, f'38/경과시간{int(pygame.time.get_ticks()/1000)}', 30, pygame.Color('blue'), 400, SCREEN_Y -65)
 
-    def draw_text(self, text, size, color, x, y):
-        font = pygame.font.SysFont('malgungothic', size)
-        text_surface = font.render(text, True, color)
-        text_rect = text_surface.get_rect()
-        text_rect.x = x
-        text_rect.y = y
-        self.image.blit(text_surface, text_rect)
 
 
 class Apple(pygame.sprite.Sprite):
@@ -47,8 +48,9 @@ class Apple(pygame.sprite.Sprite):
         self.pos = vec(random.randint(0,SCREEN_X), random.randint(0, SCREEN_Y))
         self.speed = random.randint(1,5)
         self.dir =vec(1-random.random()*2, 1-random.random()*2)
-        self.ifd = random.randint(0,2)
-        self.lucky = random.randint(0,20)
+        self.ifd = random.randint(0,9)
+        self.lucky = random.randint(0,15)
+
     def update(self):
         if self.ifd == 0:
             self.image = self.image_d
@@ -61,10 +63,20 @@ class Apple(pygame.sprite.Sprite):
                 self.game.snake.score -= 5
             if self.lucky ==0:
                 self.game.snake.score +=10
+                self.game.snake.speed += 5
             self.game.snake.score += 1
             self.game.hit_sound.play()
             self.kill()
             del self
+            return
+        if self.pos.x< 0 or self.pos.x>SCREEN_X:
+            self.kill()
+            del self
+            return
+        if self.pos.y < 0 or self.pos.y > SCREEN_Y:
+            self.kill()
+            del self
+            return
 
     def collide(self):
         return pygame.sprite.spritecollide(self, self.game.snakes, False)
@@ -86,6 +98,7 @@ class Snake(pygame.sprite.Sprite):
         self.score = 0
         self.index = 0
         self.time = 0
+        self.speed = 9
 
     def update(self):
         self.image = self.images[self.index]
@@ -95,13 +108,13 @@ class Snake(pygame.sprite.Sprite):
         if self.index >= len(self.images):
             self.index = 0
         if self.game.pressed_key[pygame.K_UP]:
-            self.pos.y += -9
+            self.pos.y += -self.speed
         if self.game.pressed_key[pygame.K_DOWN]:
-            self.pos.y += 9
+            self.pos.y += self.speed
         if self.game.pressed_key[pygame.K_LEFT]:
-            self.pos.x += -9
+            self.pos.x += -self.speed
         if self.game.pressed_key[pygame.K_RIGHT]:
-            self.pos.x += 9
+            self.pos.x += self.speed
         self.rect.center =self.pos
 
 
@@ -126,15 +139,52 @@ class Game:
         self.bg = pygame.transform.scale(self.bg, (SCREEN_X, SCREEN_Y))
         self.hit_sound = pygame.mixer.Sound('Collect.wav')
         pygame.mixer.music.load('Medieval2.mp3')
+        self.acom = False
+        self.sucimage = pygame.image.load('dan-b.png')
+        self.a = pygame.image.load('amon (1).png')
 
     def run(self):
         pygame.mixer.music.play(-1)
+        self.opening()
         while self.playing:
             self.clock.tick(FPS)
             self.event()
             self.update()
             self.draw()
             pygame.display.update()
+        self.ending()
+
+    def opening(self):
+        self.screen.fill('Black')
+        draw_text(self.screen, f'snake and apple', 100, pygame.Color('Skyblue'), SCREEN_X / 2-300, SCREEN_Y / 2)
+        draw_text(self.screen, f'시작할땐 스페이스,결과가 나오고 스페이스를 누르면 종료됩니다', 30, pygame.Color('Skyblue'), SCREEN_X / 2 - 300, SCREEN_Y / 2+200)
+        draw_text(self.screen, f'snake는 방향키로 조작합니다.', 30, pygame.Color('Skyblue'), SCREEN_X / 2 - 300, SCREEN_Y / 2+300)
+        pygame.display.update()
+        stop = True
+        while stop:
+            self.clock.tick(60)
+            pygame.event.get()
+            self.pressed_key = pygame.key.get_pressed()
+            if self.pressed_key[pygame.K_SPACE]:
+                stop = False
+
+    def ending(self):
+        self.screen.fill('Black')
+        if self.acom ==True:
+            draw_text(self.screen, f'성공', 30, pygame.Color('Skyblue'),SCREEN_X /2, SCREEN_Y /2)
+            self.screen.blit(self.sucimage ,(300,300))
+        else:
+            draw_text(self.screen, f'실패', 30, pygame.Color('gray '), SCREEN_X / 2, SCREEN_Y / 2)
+            self.screen.blit(self.a , (300,300))
+        pygame.display.update()
+        stop = True
+        while stop:
+            self.clock.tick(60)
+            pygame.event.get()
+            self.pressed_key = pygame.key.get_pressed()
+            if self.pressed_key[pygame.K_SPACE]:
+                stop = False
+
 
     def event(self):
         # 종료 코드
@@ -144,13 +194,18 @@ class Game:
                 self.playing = False
 
     def update(self):
-        if len(self.all_sprite) < 1000:
+        if len(self.all_sprite) < 60:
             self.all_sprite.add(Apple(self))
         self.all_sprite.update()
         self.ui.update()
+        if self.snake.score >= 50:
+            self.playing = False
+            self.acom = True
+        if pygame.time.get_ticks()>38000 or self.snake.score < -10:
+            self.playing = False
+            self.acom = False
 
     def draw(self):
-
         self.screen.fill('white')
         self.screen.blit(self.bg, (0, 0))
         self.all_sprite.draw(self.screen)
