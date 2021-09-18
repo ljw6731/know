@@ -89,7 +89,7 @@ class Snake(pygame.sprite.Sprite):
 
     def update(self):
         self.image = self.images[self.index]
-        if pygame.time.get_ticks()- self.time > 1000:
+        if pygame.time.get_ticks()- self.time > 100:
             self.index += 1
             self.time = pygame.time.get_ticks()
         if self.index >= len(self.images):

@@ -1,6 +1,6 @@
 import pygame
 import random
-
+vec = pygame.Vector2
 Screen_x = 480 * 2
 Screen_y = 300 * 2
 
@@ -31,54 +31,71 @@ class Ui(pygame.sprite.Sprite):
         self.image.blit(text_surface, text_rect)
 
 
-class Rain():
-    def __init__(self, x, y, game):
-        self.x = x
-        self.y = y
-        self.speed = random.randint(5, 18)
+class Rain(pygame.sprite.Sprite):
+    def __init__(self, x, y, root):
+        self.speed = random.randint(5, 28)
         self.bold = random.randint(1, 4)
-        self.game = game
-        self.color = pygame.Color('skyblue')
+        self.game = root
         self.len = random.randint(5, 15)
+        self.color = pygame.Color('skyblue')
+        self.red = random.randint(0, 10)
+        self.groups = self.game.rains, self.game.all_sprites
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        self.image = pygame.Surface((self.bold, self.len))
+        self.image.fill(self.color)
+        if self.red == 0:
+            self.image.fill('Red')
+        self.pos = vec(x, y)
+        self.rect = self.image.get_rect(topleft=self.pos)
+        self.mask = pygame.mask.from_surface(self.image)
 
-    def move(self):
-        self.y += self.speed
-        self.x += 0
+    def update(self):
+        if pygame.sprite.collide_mask(self, self.game.sa):
+            if self.red == 0:
+                self.game.sa.health -= 10
+                self.game.hit_sound.play()
+            self.kill()
+            del self
+            return
+        self.pos.y += self.speed
+        self.rect.topleft = self.pos
+        if self.off_screen():
+            self.kill()
+            del self
+            return
 
     def off_screen(self):
-        return self.y > Screen_y+20
-
-    def draw(self):
-        pygame.draw.line(self.game.screen, self.color, (self.x, self.y), (self.x, self.y+self.len), self.bold)
+        return self.rect.y > Screen_y + 20
 
 
 class Sa(pygame.sprite.Sprite):
     def __init__(self, root):
         self.game = root
-        self.image = pygame.image.load('139492090-탱크-독일-제2차-세계-대전-타이거-1-중전차-군사-군대-기계-전쟁-무기-전투-기호-실루엣-측면-보기-아이콘-벡터-일러스트-레이-션-절연.jpg')
-        #self.image.fill('Red')
-        self.image = pygame.transform.scale(self.image, (200,200))
-        self.image_t = self.image
+        self.image = pygame.image.load('나는 탱크를 잘못 만든다는 진실에 도달할수 없다.png').convert_alpha()
+        self.image_l = pygame.transform.scale(self.image, (200,200))
+        self.image_r = pygame.transform.flip(self.image, True, False)
+        self.image = self.image_l
         self.rect = self.image.get_rect()
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
-        self.rect.centerx = Screen_x/2
-        self.rect.centery = Screen_y *8 /10
         self.angle = 0
-        self.mask = self.image.get_masks()
-        self.pos = pygame.math.Vector2(0,0)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.pos = pygame.math.Vector2(Screen_x/2,Screen_y *8 /10)
         self.health = 100
 
 
     def update(self):
-        # self.angle +=1
-        self.health -= 1
         if self.health < 5:
             self.health = 100
-        self.image = pygame.transform.rotozoom(self.image_t, self.angle, 1)
-        self.image.set_colorkey()
         self.rect = self.image.get_rect()
-        self.pos.x += -8
+        if self.game.pressed_key[pygame.K_RIGHT]:
+            self.pos.x += 5
+            self.image = self.image_r
+        if self.game.pressed_key[pygame.K_LEFT]:
+            self.pos.x -= 5
+            self.image = self.image_l
+
+
         if self.pos.x > Screen_x:
             self.pos.x = 0
         if self.pos.x < 0:
@@ -97,11 +114,18 @@ class Game:
         self.playing = True
         self.all_sprites = pygame.sprite.Group()
         self.sa = Sa(self)
-        self.rains = []
+        self.rains = pygame.sprite.Group()
         self.ui = pygame.sprite.GroupSingle()
         self.ui.add(Ui(self))
+        self.bg = pygame.image.load('BG.png').convert_alpha()
+        self.bg = pygame.transform.scale(self.bg, (Screen_x, Screen_y))
+        self.camera = vec(0, 0)
+        self.bgcamera = vec(0, 0)
+        self.hit_sound = pygame.mixer.Sound('Collect.wav')
+        pygame.mixer.music.load('Garden (1).mp3')
 
     def run(self):
+        pygame.mixer.music.play(-1)
         while self.playing:
             self.clock.tick(90)
             self.event()
@@ -114,31 +138,32 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.playing = False
-        self.rains.append(Rain(random.randint(0, Screen_x) , 100, self))
+        self.rains.add(Rain(random.randint(0, Screen_x) , 100, self))
 
 
     def update(self):
         self.all_sprites.update()
-        for rain in self.rains:
-            rain.move()
-            if rain.off_screen():
-                self.rains.remove(rain)
-                del rain
         self.ui.update()
+        if Screen_x / 8 * 2 > self.sa.pos.x:
+            self.camera.x = -10
+        elif Screen_x * 6 / 8 < self.sa.pos.x:
+            self.camera.x = 10
+        else:
+            self.camera.x = 0
         for sprite in self.all_sprites:
-            if self.pressed_key[pygame.K_RIGHT]:
-                sprite.pos.x -= 1
-            if self.pressed_key[pygame.K_LEFT]:
-                sprite.pos.x += 1
+            sprite.pos.x -= self.camera.x
+        self.bgcamera += self.camera
 
 
 
     def draw(self):
         self.screen.fill((255, 255, 255))
+        for n in range(5):
+            self.screen.blit(self.bg, (Screen_x * (n - 2) - self.bgcamera.x, 0))
         self.all_sprites.draw(self.screen)
-        for rain in self.rains:
-            rain.draw()
         self.ui.draw(self.screen)
+
+
 
 
 game = Game()
