@@ -32,7 +32,7 @@ class Ui(pygame.sprite.Sprite):
         self.ui_health = self.game.snake.score
         pygame.draw.line(self.image, 'blue', (100, SCREEN_Y-65),  (100+self.ui_health*3, SCREEN_Y-65), 15)
         draw_text(self.image, f'사과를 먹은수{self.ui_health}', 30, pygame.Color('blue'), 100, SCREEN_Y -65)
-        draw_text(self.image, f'38/경과시간{int(pygame.time.get_ticks()/1000)}', 30, pygame.Color('blue'), 400, SCREEN_Y -65)
+        draw_text(self.image, f'40/경과시간{int(pygame.time.get_ticks()/1000)}', 30, pygame.Color('blue'), 400, SCREEN_Y -65)
 
 
 
@@ -41,15 +41,17 @@ class Apple(pygame.sprite.Sprite):
         self.image = pygame.image.load('apple.png').convert_alpha()
         self.image_d = pygame.image.load('apple2.png').convert_alpha()
         self.image_f = pygame.image.load('apple3.png').convert_alpha()
+        self.image_f = pygame.image.load('fffff.svg').convert_alpha()
         self.rect = self.image.get_rect()
         self.game = root
         self.groups= self.game.all_sprite
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.pos = vec(random.randint(0,SCREEN_X), random.randint(0, SCREEN_Y))
-        self.speed = random.randint(1,5)
+        self.speed = random.randint(3,10)
         self.dir =vec(1-random.random()*2, 1-random.random()*2)
-        self.ifd = random.randint(0,9)
-        self.lucky = random.randint(0,15)
+        self.ifd = random.randint(0,12)
+        self.lucky = random.randint(0,31)
+        self.dog = random.randint(0,38)
 
     def update(self):
         if self.ifd == 0:
@@ -63,6 +65,8 @@ class Apple(pygame.sprite.Sprite):
                 self.game.snake.score -= 5
             if self.lucky ==0:
                 self.game.snake.score +=10
+            if self.dog ==0:
+                self.game.snake.score -=100
                 self.game.snake.speed += 5
             self.game.snake.score += 1
             self.game.hit_sound.play()
@@ -135,13 +139,13 @@ class Game:
         self.ui = pygame.sprite.GroupSingle()
         self.ui.add(Ui(self))
         self.pressed_key = pygame.key.get_pressed()
-        self.bg = pygame.image.load('Stripes.png')
+        self.bg = pygame.image.load('Light.svg')
         self.bg = pygame.transform.scale(self.bg, (SCREEN_X, SCREEN_Y))
         self.hit_sound = pygame.mixer.Sound('Collect.wav')
         pygame.mixer.music.load('Medieval2.mp3')
         self.acom = False
-        self.sucimage = pygame.image.load('dan-b.png')
-        self.a = pygame.image.load('amon (1).png')
+        self.sucimage = pygame.image.load('Dot-a.svg').convert_alpha()
+        self.a = pygame.image.load('Dot-d.svg').convert_alpha()
 
     def run(self):
         pygame.mixer.music.play(-1)
@@ -171,11 +175,11 @@ class Game:
     def ending(self):
         self.screen.fill('Black')
         if self.acom ==True:
-            draw_text(self.screen, f'성공', 30, pygame.Color('Skyblue'),SCREEN_X /2, SCREEN_Y /2)
+            draw_text(self.screen, f'', 30, pygame.Color('Skyblue'),SCREEN_X /2, SCREEN_Y /2)
             self.screen.blit(self.sucimage ,(300,300))
         else:
-            draw_text(self.screen, f'실패', 30, pygame.Color('Gray'), SCREEN_X / 2, SCREEN_Y / 2)
-            self.screen.blit(self.a , (400,300))
+            draw_text(self.screen, f'', 30, pygame.Color('Gray'), SCREEN_X / 2, SCREEN_Y / 2)
+            self.screen.blit(self.a , (500, 500))
         pygame.display.update()
         stop = True
         while stop:
@@ -194,14 +198,14 @@ class Game:
                 self.playing = False
 
     def update(self):
-        if len(self.all_sprite) < 60:
+        if len(self.all_sprite) < 25:
             self.all_sprite.add(Apple(self))
         self.all_sprite.update()
         self.ui.update()
-        if self.snake.score >= 50:
+        if self.snake.score >= 100:
             self.playing = False
             self.acom = True
-        if pygame.time.get_ticks()>38000 or self.snake.score < -10:
+        if pygame.time.get_ticks()>40000 or self.snake.score < -10:
             self.playing = False
             self.acom = False
 
